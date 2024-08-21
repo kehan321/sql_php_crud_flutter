@@ -1,48 +1,35 @@
 <?php
-// Include the database configuration file
-include 'config.php';
+// Database connection details
+$servername = "localhost";
+$username = "root"; // Replace with your MySQL username
+$password = ""; // Replace with your MySQL password
+$dbname = "mysqll"; // Replace with your database name
 
-// Get the raw POST data
-$data = json_decode(file_get_contents("php://input"), true);
-
-// Debugging: Log received data
-error_log(print_r($data, true));
-
-// Check if data is valid
-if (is_null($data) || !isset($data['name']) || !isset($data['age'])) {
-    header('Content-Type: application/json');
-    echo json_encode(['status' => 'error', 'message' => 'Invalid or missing data']);
-    exit();
-}
-
-// Extract 'name' and 'age' from the received data
-$name = $data['name'];
-$age = $data['age'];
-
-// Create a new MySQLi connection
-$conn = new mysqli(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
+// Create connection
+$conn = new mysqli($servername, $username, $password, $dbname);
 
 // Check connection
 if ($conn->connect_error) {
-    header('Content-Type: application/json');
-    echo json_encode(['status' => 'error', 'message' => 'Database connection failed: ' . $conn->connect_error]);
-    exit();
+    die("Connection failed: " . $conn->connect_error);
 }
 
-// Prepare an SQL statement to prevent SQL injection
-$stmt = $conn->prepare("INSERT INTO mymy (name, age) VALUES (?, ?)");
-$stmt->bind_param("si", $name, $age);
+// Get POST data
+$name = $_POST['name'];
+$age = $_POST['age'];
+$id = $_POST['id'];
+
+// Prepare and bind
+$stmt = $conn->prepare("INSERT INTO mymy (name, age, id) VALUES (?, ?, ?)");
+$stmt->bind_param("sii", $name, $age, $id);
 
 // Execute the query
 if ($stmt->execute()) {
-    header('Content-Type: application/json');
-    echo json_encode(['status' => 'success', 'message' => 'Data added successfully']);
+    echo "New record created successfully";
 } else {
-    header('Content-Type: application/json');
-    echo json_encode(['status' => 'error', 'message' => 'Failed to add data: ' . $stmt->error]);
+    echo "Error: " . $stmt->error;
 }
 
-// Close the statement and connection
+// Close connections
 $stmt->close();
 $conn->close();
 ?>
